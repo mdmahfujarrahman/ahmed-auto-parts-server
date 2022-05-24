@@ -1,0 +1,16 @@
+[
+    {
+        "name": "Engine Parts",
+        "img": "https://i.ibb.co/JvsykbC/Engine-Parts-1.png",
+        "description": "The characteristics of this part fully comply with those declared by the manufacturer. The part has been checked for authenticity and functionality by our employee.",
+        "quantity": "5000",
+        "price": "189"
+    },
+    {
+        "name": "Suspension Parts",
+        "img": "https://i.ibb.co/JvsykbC/Engine-Parts-1.png",
+        "description": "The characteristics of this part fully comply with those declared by the manufacturer. The part has been checked for authenticity and functionality by our employee.",
+        "quantity": "4000",
+        "price": "179"
+    }
+]

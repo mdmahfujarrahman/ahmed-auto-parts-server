@@ -50,9 +50,6 @@ run().catch(console.dir)
 app.get('/', (req, res) => {
     res.send('Welcome to Ahmed Auto parts Server')
 })
-app.get('/hello', (req, res) => {
-    res.send('Welcome to Ahmed Auto parts Server')
-})
 
 
 

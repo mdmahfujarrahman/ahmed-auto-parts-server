@@ -26,10 +26,21 @@ async function run(){
 
         await client.connect();
         const partsCollection = client.db("ahmed_parts").collection("parts");
+        const reviewsCollection = client
+            .db("ahmed_parts")
+            .collection("reviews");
 
+        //all parts
         app.get('/parts', async (req, res) => {
             const parts = await partsCollection.find().toArray()
             res.send(parts)
+        })
+
+
+        //all reviews
+        app.get('/reviews', async (req, res) => {
+            const reviews = await reviewsCollection.find().toArray()
+            res.send(reviews)
         })
         
         

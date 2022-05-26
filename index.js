@@ -58,7 +58,13 @@ async function run(){
             const users = await userCollection.find().toArray()
             res.send(users)
         })
-
+        //find single user
+        app.get("/user", verifyToken, async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const users = await userCollection.find(query).toArray();
+            res.send(users);
+        });
 
         // users added
         app.put("/user/:email", async (req, res) => {
@@ -83,6 +89,29 @@ async function run(){
             res.send({ results, token });
         });
 
+        //user details update
+        app.put("/user/:email", verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const updateProfile = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    photoURL: updateProfile.photoURL,
+                    email: updateProfile.email,
+                    displayName: updateProfile.displayName,
+                    phone: updateProfile.phone,
+                    education: updateProfile.education,
+                    address: updateProfile.address,
+                },
+            };
+            const results = await userCollection.updateOne(
+                filter,
+                updateDoc,
+                options
+            );
+            res.send(results);
+        });
 
 
 

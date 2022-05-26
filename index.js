@@ -116,7 +116,6 @@ async function run(){
 
 
         //Orders
-
         app.post('/order',  async (req, res) => {
             const orders = req.body;
             const query = {partsName: orders.partsName, user: orders.user};
@@ -128,6 +127,14 @@ async function run(){
             res.send({success: true, results})
         })
 
+        //find order with email address
+        app.get('/order',verifyToken, async (req, res) => {
+            const user = req.query.user;
+            const query = { user: user };
+            const orders = await orderCollection.find(query).toArray();
+            res.send(orders);
+        })
+
 
 
 
@@ -135,6 +142,17 @@ async function run(){
         app.get('/reviews', async (req, res) => {
             const reviews = await reviewsCollection.find().toArray()
             res.send(reviews)
+        })
+        //add review
+        app.post('/review', async (req, res) => {
+            const review = req.body
+            const query = { email: review.email};
+            const exists = await reviewsCollection.findOne(query)
+            if(exists) {
+                return res.send({ success: false, review: exists });
+            }
+            const results = await reviewsCollection.insertOne(review)
+            res.send({ success: true, results });
         })
         
 

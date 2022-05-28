@@ -167,7 +167,7 @@ async function run(){
 
 
         //add parts
-        app.post("/parts", verifyToken, async (req, res) => {
+        app.post("/parts", async (req, res) => {
             const parts = req.body;
             console.log(parts);
             const query = { name: parts.name };

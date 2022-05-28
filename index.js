@@ -53,8 +53,25 @@ async function run(){
             .db("ahmed_parts")
             .collection("reviews");
 
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({
+                email: requester,
+            });
+            if (requesterAccount.role == "admin") {
+                next();
+            } else {
+                res.status(403).send({ message: "forbidden" });
+            }
+        };
+
+
+
+
+
+
         //all user
-        app.get("/users", async (req, res) => {
+        app.get("/users",verifyToken, async (req, res) => {
             const users = await userCollection.find().toArray()
             res.send(users)
         })
@@ -65,6 +82,25 @@ async function run(){
             const users = await userCollection.find(query).toArray();
             res.send(users);
         });
+
+        app.put('/user/admin/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const updateDoc = { 
+                $set: { 
+                    role: 'admin'
+                }
+            }
+            const results = await userCollection.updateOne(query, updateDoc);
+            res.send(results);
+        })
+        //admin checking
+        app.get('/admin/:email', async (req, res)=>{
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({admin: isAdmin});
+        })
 
         // users added
         app.put("/user/:email", async (req, res) => {
@@ -113,7 +149,35 @@ async function run(){
             res.send(results);
         });
 
+        //user delete
+        app.delete('/user/:email',verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === "admin";
+            if (isAdmin){
 
+               return res.status(403).send({ message: "forbidden" }); 
+
+            } else{
+                const filter = { email : email};
+                const results = await userCollection.deleteOne(filter);
+                res.send(results);
+            }   
+        })
+
+
+        //add parts
+        app.post("/parts", verifyToken, async (req, res) => {
+            const parts = req.body;
+            console.log(parts);
+            const query = { name: parts.name };
+            const exists = await partsCollection.findOne(query);
+            if (exists) {
+                return res.send({ success: false, parts: exists });
+            }
+            const results = await partsCollection.insertOne(parts);
+            res.send({ success: true, results });
+        });
 
         //all parts
         app.get('/parts', async (req, res) => {
@@ -124,7 +188,7 @@ async function run(){
         //single parts
         app.get('/parts/:id', async (req, res) => {
             const id = req.params.id
-            const query = { _id: ObjectId(id) };
+            const query = {_id: ObjectId(id)};
             const parts = await partsCollection.findOne(query);
             res.send(parts)
         })
@@ -142,10 +206,19 @@ async function run(){
            const results = await partsCollection.updateOne(filter, updateDoc);
            res.send(results)
        })
+       //parts delete
+       app.delete("/parts/:id", async (req, res) => {
+           const id = req.params.id
+           const filter = {_id: ObjectId(id)}
+           const results = await partsCollection.deleteOne(filter)
+           res.send(results)
+       });
+
+
 
 
         //Orders
-        app.post('/order',  async (req, res) => {
+        app.post('/order',verifyToken,  async (req, res) => {
             const orders = req.body;
             const query = {partsName: orders.partsName, user: orders.user};
             const exists = await orderCollection.findOne(query);
@@ -155,7 +228,11 @@ async function run(){
             const results = await orderCollection.insertOne(orders)
             res.send({success: true, results})
         })
-
+        
+        app.get('/orders',verifyToken, async (req, res) => {
+            const order = await orderCollection.find().toArray()
+            res.send(order)
+        })
         //find order with email address
         app.get('/order',verifyToken, async (req, res) => {
             const user = req.query.user;
@@ -164,7 +241,15 @@ async function run(){
             res.send(orders);
         })
 
-
+        app.delete('/order/:id',verifyToken, async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: ObjectId(id) };
+            console.log(filter);
+            const results = await partsCollection.deleteOne(filter);
+            console.log(results)
+            res.send(results);
+        })
 
 
         //all reviews

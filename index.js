@@ -166,8 +166,8 @@ async function run(){
         })
 
 
-        //add parts
-        app.post("/parts", async (req, res) => {
+        //add parts by admin
+        app.post("/parts",verifyToken, async (req, res) => {
             const parts = req.body;
             console.log(parts);
             const query = { name: parts.name };
@@ -180,7 +180,7 @@ async function run(){
         });
 
         //all parts
-        app.get("/parts", verifyToken, async (req, res) => {
+        app.get("/parts", async (req, res) => {
             const parts = await partsCollection.find().toArray();
             res.send(parts);
         });

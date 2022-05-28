@@ -197,12 +197,18 @@ async function run(){
        app.put('/parts/:id', verifyToken, async (req, res) => {
            const id = req.params.id;
            const updateDetails =req.body
+           console.log(updateDetails);
            const filter = { _id: ObjectId(id) };
            const updateDoc = {
                $set: {
+                   name: updateDetails.name,
+                   img: updateDetails.img,
+                   description: updateDetails.description,
                    quantity: updateDetails.quantity,
+                   price: updateDetails.price,
                },
            };
+           console.log(updateDoc);
            const results = await partsCollection.updateOne(filter, updateDoc);
            res.send(results)
        })

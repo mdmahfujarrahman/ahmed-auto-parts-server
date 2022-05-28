@@ -180,10 +180,10 @@ async function run(){
         });
 
         //all parts
-        app.get('/parts', async (req, res) => {
-            const parts = await partsCollection.find().toArray()
-            res.send(parts)
-        })
+        app.get("/parts", verifyToken, async (req, res) => {
+            const parts = await partsCollection.find().toArray();
+            res.send(parts);
+        });
 
         //single parts
         app.get('/parts/:id', async (req, res) => {

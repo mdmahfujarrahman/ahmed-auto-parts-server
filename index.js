@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 
 app.use(cors());
@@ -52,6 +53,7 @@ async function run(){
         const reviewsCollection = client
             .db("ahmed_parts")
             .collection("reviews");
+        const paymentCollection = client.db("ahmed_parts").collection("payments")
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -67,7 +69,17 @@ async function run(){
 
 
 
-
+        app.post("/create-payment-intent", verifyToken, async (req, res) => {
+            const parts = req.body;
+            const price = parts.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ["card"],
+            });
+            res.send({ clientSecret: paymentIntent.client_secret });
+        });
 
 
         //all user
@@ -169,7 +181,6 @@ async function run(){
         //add parts by admin
         app.post("/parts",verifyToken, async (req, res) => {
             const parts = req.body;
-            console.log(parts);
             const query = { name: parts.name };
             const exists = await partsCollection.findOne(query);
             if (exists) {
@@ -197,7 +208,6 @@ async function run(){
        app.put('/parts/:id', verifyToken, async (req, res) => {
            const id = req.params.id;
            const updateDetails =req.body
-           console.log(updateDetails);
            const filter = { _id: ObjectId(id) };
            const updateDoc = {
                $set: {
@@ -208,16 +218,15 @@ async function run(){
                    price: updateDetails.price,
                },
            };
-           console.log(updateDoc);
            const results = await partsCollection.updateOne(filter, updateDoc);
            res.send(results)
        })
        //parts delete
-       app.delete("/parts/:id", async (req, res) => {
-           const id = req.params.id
-           const filter = {_id: ObjectId(id)}
-           const results = await partsCollection.deleteOne(filter)
-           res.send(results)
+       app.delete("/parts/:id", verifyToken, async (req, res) => {
+           const id = req.params.id;
+           const filter = { _id: ObjectId(id) };
+           const results = await partsCollection.deleteOne(filter);
+           res.send(results);
        });
 
 
@@ -246,17 +255,61 @@ async function run(){
             const orders = await orderCollection.find(query).toArray();
             res.send(orders);
         })
-
-        app.delete('/order/:id',verifyToken, async (req, res) => {
-            const id = req.params.id;
-            console.log(id);
-            const filter = { _id: ObjectId(id) };
-            console.log(filter);
-            const results = await partsCollection.deleteOne(filter);
-            console.log(results)
+        //single order get
+        app.get('/order/:id', verifyToken, async (req, res) => {
+            const id = req.params.id
+            const filter = {_id: ObjectId(id)}
+            const results = await orderCollection.findOne(filter)
             res.send(results);
         })
 
+        app.put("/order/:id", verifyToken, async (req, res) => {
+            const id = req.params.id
+            const payment = req.body
+            console.log(payment);
+            const filter = {id: ObjectId(id)}
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            console.log(updateDoc);
+            const results = await paymentCollection.insertOne(payment);
+            const updatedOrder = await orderCollection.updateOne(
+                filter,
+                updateDoc
+            );
+            console.log(updatedOrder);
+            res.send(updatedOrder)
+        });
+
+
+        app.put("/parts/:id", verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const updateDetails = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    name: updateDetails.name,
+                    img: updateDetails.img,
+                    description: updateDetails.description,
+                    quantity: updateDetails.quantity,
+                    price: updateDetails.price,
+                },
+            };
+            const results = await partsCollection.updateOne(filter, updateDoc);
+            res.send(results);
+        });
+
+
+        //order delete
+        app.delete('/order/:id',verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const results = await orderCollection.deleteOne(filter);
+            res.send(results);
+        })
 
         //all reviews
         app.get('/reviews', async (req, res) => {

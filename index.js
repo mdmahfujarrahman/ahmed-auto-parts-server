@@ -266,7 +266,6 @@ async function run(){
         app.put("/order/:id", verifyToken, async (req, res) => {
             const id = req.params.id
             const payment = req.body
-            console.log(payment);
             const filter = {id: ObjectId(id)}
             const updateDoc = {
                 $set: {
@@ -274,13 +273,11 @@ async function run(){
                     transactionId: payment.transactionId
                 }
             }
-            console.log(updateDoc);
             const results = await paymentCollection.insertOne(payment);
             const updatedOrder = await orderCollection.updateOne(
                 filter,
                 updateDoc
             );
-            console.log(updatedOrder);
             res.send(updatedOrder)
         });
 

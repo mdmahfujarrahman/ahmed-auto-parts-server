@@ -134,7 +134,7 @@ async function run(){
                 { expiresIn: "1d" }
             );
 
-            res.send({ results, token });
+            res.json({results, token });
         });
 
         //user details update

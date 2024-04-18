@@ -123,10 +123,10 @@ async function run(){
             const updateDoc = {
                 $set: user,
             };
-            const results = await userCollection.findOne(
-                {
-                    email: email
-                }
+            const results = await userCollection.updateOne(
+                filter,
+                updateDoc,
+                options
             );
             const token = jwt.sign(
                 { email: email },
@@ -134,7 +134,7 @@ async function run(){
                 { expiresIn: "1d" }
             );
 
-           return res.json({results, token });
+           return res.json({ results, token });
         });
 
         //user details update

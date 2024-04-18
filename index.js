@@ -123,10 +123,10 @@ async function run(){
             const updateDoc = {
                 $set: user,
             };
-            const results = await userCollection.updateOne(
-                filter,
-                updateDoc,
-                options
+            const results = await userCollection.findOne(
+                {
+                    email: email
+                }
             );
             const token = jwt.sign(
                 { email: email },
